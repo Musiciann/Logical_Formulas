@@ -1,52 +1,59 @@
 from unittest import TestCase
-from Source import Logical_Formulas
+from Logical_Formulas import LogicalFunction
 
 
 class Test(TestCase):
     def test_binary_to_decimal_direct_code(self):
-        binary_num, decimal_num = Logical_Formulas.binary_to_decimal_direct_code('00000010')
-        assert binary_num == '00000010'
-        assert decimal_num == 2
-
-    def test_parse_expression(self):
-        variables, operations = Logical_Formulas.parse_expression('a&b')
-        assert variables == ['a', 'b']
-        assert operations == ['&']
-
-    def test_evaluate_formula(self):
-        result = Logical_Formulas.evaluate_formula('a&b', {'a':1, 'b':0})
-        assert result == 0
-
-    def test_truth_table(self):
-        variables, expr_result, combinations = Logical_Formulas.truth_table('a&b')
-        assert variables == ['a', 'b']
-        assert expr_result == [({'a': 0, 'b': 0}, 0), ({'a': 0, 'b': 1}, 0), ({'a': 1, 'b': 0}, 0), ({'a': 1, 'b': 1}, 1)]
-        assert combinations == [(0, 0), (0, 1), (1, 0), (1, 1)]
-
-    def test_generate_sdnf(self):
-        variables = ['a', 'b']
-        expr_result = [({'a': 0, 'b': 0}, 0), ({'a': 0, 'b': 1}, 0), ({'a': 1, 'b': 0}, 0), ({'a': 1, 'b': 1}, 1)]
-        sdnf = Logical_Formulas.generate_sdnf(variables, expr_result)
-        assert sdnf == '(a & b)'
-
-    def test_generate_sknf(self):
-        variables = ['a', 'b']
-        expr_result = [({'a': 0, 'b': 0}, 0), ({'a': 0, 'b': 1}, 0), ({'a': 1, 'b': 0}, 0), ({'a': 1, 'b': 1}, 1)]
-        sknf = Logical_Formulas.generate_sknf(variables, expr_result)
-        assert sknf == '(a | b) & (a | ~b) & (~a | b)'
-
-    def test_generate_sdnf_numeric(self):
-        expr_result = [({'a': 0, 'b': 0}, 0), ({'a': 0, 'b': 1}, 0), ({'a': 1, 'b': 0}, 0), ({'a': 1, 'b': 1}, 1)]
-        combinations = [(0, 0), (0, 1), (1, 0), (1, 1)]
-        sdnf_numeric = Logical_Formulas.generate_sdnf_numeric(expr_result, combinations)
-        assert sdnf_numeric == [3]
-
-    def test_generate_sknf_numeric(self):
-        expr_result = [({'a': 0, 'b': 0}, 0), ({'a': 0, 'b': 1}, 0), ({'a': 1, 'b': 0}, 0), ({'a': 1, 'b': 1}, 1)]
-        combinations = [(0, 0), (0, 1), (1, 0), (1, 1)]
-        sknf_numeric = Logical_Formulas.generate_sknf_numeric(expr_result, combinations)
-        assert sknf_numeric == [0, 1, 2]
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        binary_num, decimal_num = logical_func.binary_to_decimal_direct_code('10000010')
+        assert binary_num == '10000010'
+        assert decimal_num == -2
 
     def test_binary_result_decimal(self):
-        decimal_result = Logical_Formulas.binary_result_decimal((0, 0, 0, 1))
-        assert decimal_result == 1
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        decimal_result = logical_func.binary_result_decimal((1, 0, 0, 0, 0, 0, 1, 0))
+        assert decimal_result == -2
+
+    def test_evaluate_expr(self):
+        expr = "!(a&b)|!c~(d>(n|(g&(k|m))))"
+        logical_func = LogicalFunction(expr)
+        result = logical_func.evaluate((0, 0, 0, 0, 0, 0, 0, 0))
+        assert result == 0
+
+    def test_truth_table_result(self):
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        logical_func.generate_truth_table()
+        binary_result, decimal_result = logical_func.truth_table_result()
+        assert binary_result == [0, 0, 1, 0, 1, 0, 1, 0]
+        assert decimal_result == 42
+
+    def test_generate_sdnf(self):
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        logical_func.generate_truth_table()
+        sdnf = logical_func.generate_sdnf()
+        assert sdnf == '(!a & b & !c) | (a & !b & !c) | (a & b & !c)'
+
+    def test_generate_sknf(self):
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        logical_func.generate_truth_table()
+        scnf = logical_func.generate_scnf()
+        assert scnf == '(a | b | c) & (a | b | !c) & (a | !b | !c) & (!a | b | !c) & (!a | !b | !c)'
+
+    def test_generate_sdnf_numeric(self):
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        logical_func.generate_truth_table()
+        sdnf = logical_func.generate_sdnf_numeric()
+        assert sdnf == [2, 4, 6]
+
+    def test_generate_scnf_numeric(self):
+        expr = "(a | b) & !c"
+        logical_func = LogicalFunction(expr)
+        logical_func.generate_truth_table()
+        scnf = logical_func.generate_scnf_numeric()
+        assert scnf == [0, 1, 3, 5, 7]

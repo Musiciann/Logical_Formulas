@@ -1,4 +1,5 @@
 from Source import Logical_Formulas
+from Source import Print_Table_Function
 
 if __name__ == "__main__":
     expr = Logical_Formulas.get_expression()
