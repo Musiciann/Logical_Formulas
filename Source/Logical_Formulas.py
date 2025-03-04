@@ -44,73 +44,20 @@ class LogicalFunction:
                 stack.append(current_result[expr[i]])
             elif expr[i] == '!':
                 i += 1
-                if expr[i] == '(':
-                    j = self.find_matching_parenthesis(expr, i)
-                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
-                    stack.append(1 - inner_value)
-                    i = j
-                else:
-                    stack.append(1 - current_result[expr[i]])
+                i, result = self.handle_not(expr, i, current_result)
+                stack.append(result)
             elif expr[i] == '&':
-                a = stack.pop()
-                i += 1
-                if expr[i] == '!':
-                    i += 1
-                    b = (1 - current_result[expr[i]])
-                    stack.append(a * b)
-                elif expr[i] == '(':
-                    j = self.find_matching_parenthesis(expr, i)
-                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
-                    stack.append(inner_value)
-                    i = j
-                else:
-                    b = current_result[expr[i]]
-                    stack.append(a * b)
+                i, result = self.handle_and(expr, i, stack, current_result)
+                stack.append(result)
             elif expr[i] == '|':
-                a = stack.pop()
-                i += 1
-                if expr[i] == '!':
-                    i += 1
-                    b = (1 - current_result[expr[i]])
-                    stack.append(max(a, b))
-                elif expr[i] == '(':
-                    j = self.find_matching_parenthesis(expr, i)
-                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
-                    stack.append(inner_value)
-                    i = j
-                else:
-                    b = current_result[expr[i]]
-                    stack.append(max(a, b))
+                i, result = self.handle_or(expr, i, stack, current_result)
+                stack.append(result)
             elif expr[i] == '~':
-                a = stack.pop()
-                i += 1
-                if expr[i] == '!':
-                    i += 1
-                    b = (1 - current_result[expr[i]])
-                    stack.append(int(a == b))
-                elif expr[i] == '(':
-                    j = self.find_matching_parenthesis(expr, i)
-                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
-                    stack.append(inner_value)
-                    i = j
-                else:
-                    b = current_result[expr[i]]
-                    stack.append(int(a == b))
+                i, result = self.handle_equivalence(expr, i, stack, current_result)
+                stack.append(result)
             elif expr[i] == '>':
-                a = stack.pop()
-                i += 1
-                if expr[i] == '!':
-                    i += 1
-                    b = (1 - current_result[expr[i]])
-                    stack.append(int(not a or b))
-                elif expr[i] == '(':
-                    j = self.find_matching_parenthesis(expr, i)
-                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
-                    stack.append(inner_value)
-                    i = j
-                else:
-                    b = current_result[expr[i]]
-                    stack.append(int(not a or b))
+                i, result = self.handle_implication(expr, i, stack, current_result)
+                stack.append(result)
             elif expr[i] == '(':
                 j = self.find_matching_parenthesis(expr, i)
                 inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
@@ -118,10 +65,102 @@ class LogicalFunction:
                 i = j
             i += 1
 
-        result = stack[0]
+        total_result = stack[0]
         for value in stack[1:]:
-            result = result & value
-        return result
+            total_result = total_result & value
+        return total_result
+
+    def handle_not(self, expr, i, current_result):
+        if expr[i] == '(':
+            j = self.find_matching_parenthesis(expr, i)
+            inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+            return j, 1 - inner_value
+        else:
+            return i, 1 - current_result[expr[i]]
+
+    def handle_and(self, expr, i, stack, current_result):
+        if stack:
+            a = stack.pop()
+            i += 1
+            if expr[i] == '(':
+                j = self.find_matching_parenthesis(expr, i)
+                inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                return j, (a * inner_value)
+            elif expr[i] == '!':
+                i += 1
+                if expr[i] == '(':
+                    j = self.find_matching_parenthesis(expr, i)
+                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                    return j, (a * (1 - inner_value))
+                else:
+                    return i, (a * (1 - current_result[expr[i]]))
+            else:
+                b = current_result[expr[i]]
+                return i, (a * b)
+        return i, 0
+
+    def handle_or(self, expr, i, stack, current_result):
+        if stack:
+            a = stack.pop()
+            i += 1
+            if expr[i] == '(':
+                j = self.find_matching_parenthesis(expr, i)
+                inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                return j, max(a, inner_value)
+            elif expr[i] == '!':
+                i += 1
+                if expr[i] == '(':
+                    j = self.find_matching_parenthesis(expr, i)
+                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                    return j, max(a, (1 - inner_value))
+                else:
+                    return i, max(a, (1 - current_result[expr[i]]))
+            else:
+                b = current_result[expr[i]]
+                return i, max(a, b)
+        return i, 0
+
+    def handle_equivalence(self, expr, i, stack, current_result):
+        if stack:
+            a = stack.pop()
+            i += 1
+            if expr[i] == '(':
+                j = self.find_matching_parenthesis(expr, i)
+                inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                return j, int(a == inner_value)
+            elif expr[i] == '!':
+                i += 1
+                if expr[i] == '(':
+                    j = self.find_matching_parenthesis(expr, i)
+                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                    return j, int(a == (1 - inner_value))
+                else:
+                    return i, int(a == (1 - current_result[expr[i]]))
+            else:
+                b = current_result[expr[i]]
+                return i, int(a == b)
+        return i, 0
+
+    def handle_implication(self, expr, i, stack, current_result):
+        if stack:
+            a = stack.pop()
+            i += 1
+            if expr[i] == '(':
+                j = self.find_matching_parenthesis(expr, i)
+                inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                return j, int(not a or inner_value)
+            elif expr[i] == '!':
+                i += 1
+                if expr[i] == '(':
+                    j = self.find_matching_parenthesis(expr, i)
+                    inner_value = self.evaluate_recursive(expr[i + 1:j], current_result)
+                    return j, int(not a or (1 - inner_value))
+                else:
+                    return i, int(not a or (1 - current_result[expr[i]]))
+            else:
+                b = current_result[expr[i]]
+                return i, int(not a or b)
+        return i, 0
 
     def find_matching_parenthesis(self, expr, start) -> int:
         count = 1

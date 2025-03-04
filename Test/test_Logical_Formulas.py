@@ -1,5 +1,5 @@
 from unittest import TestCase
-from Logical_Formulas import LogicalFunction
+from LF import LogicalFunction
 
 
 class Test(TestCase):
@@ -20,7 +20,7 @@ class Test(TestCase):
         expr = "!(a&b)|!c~(d>(n|(g&(k|m))))"
         logical_func = LogicalFunction(expr)
         result = logical_func.evaluate((0, 0, 0, 0, 0, 0, 0, 0))
-        assert result == 0
+        assert result == 1
 
     def test_truth_table_result(self):
         expr = "(a | b) & !c"
