@@ -64,7 +64,6 @@ class LogicalFunction:
                 stack.append(inner_value)
                 i = j
             i += 1
-
         total_result = stack[0]
         for value in stack[1:]:
             total_result = total_result & value
