@@ -1,15 +1,14 @@
-from Source import Logical_Formulas
-from Source import Print_Table_Function
+from LF import LogicalFunction
+from Print_Truth_Table_Function import print_truth_table, show_truth_table_result
 
 if __name__ == "__main__":
-    expr = Logical_Formulas.get_expression()
-    variables, results, combinations = Logical_Formulas.truth_table(expr)
-    sdnf = Logical_Formulas.generate_sdnf(variables, results)
-    sknf = Logical_Formulas.generate_sknf(variables, results)
-    sknf_numeric = Logical_Formulas.generate_sknf_numeric(results, combinations)
-    sdnf_numeric = Logical_Formulas.generate_sdnf_numeric(results, combinations)
-    print(results)
-    print(f"Simplified Disjunctive Normal Form (SDNF): {sdnf}")
-    print(f"Simplified Conjunctive Normal Form (SCNF): {sknf}")
-    print(f"Numeric Simplified Disjunctive Normal Form (SDNF): {sdnf_numeric}")
-    print(f"Numeric Simplified Conjunctive Normal Form (SCNF): {sknf_numeric}")
+    expr = input("Insert expression >>> ")
+    logical_func = LogicalFunction(expr)
+    truth_table, variables, expression = logical_func.generate_truth_table()
+    print_truth_table(truth_table, variables, expression)
+    binary_result, decimal_result = logical_func.truth_table_result()
+    show_truth_table_result(binary_result, decimal_result)
+    print("SDNF:", logical_func.generate_sdnf())
+    print("SDNF numeric:", logical_func.generate_sdnf_numeric())
+    print("SCNF:", logical_func.generate_scnf())
+    print("SCNF numeric:", logical_func.generate_scnf_numeric())
