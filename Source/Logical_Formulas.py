@@ -1,6 +1,5 @@
 import itertools
-
-VARIABLES = 'abcdefghijklmnopqrstuvwxyz'
+from constants import *
 
 class LogicalFunction:
     def __init__(self, expression):
@@ -175,11 +174,13 @@ class LogicalFunction:
 
     def truth_table_result(self) -> tuple:
         binary_result = []
+        binary_result_sign = [0]
 
         for i in range(len(self.truth_table)):
             binary_result.append(self.truth_table[i][1])
+            binary_result_sign.append(self.truth_table[i][1])
 
-        decimal_result = self.binary_result_decimal(tuple(binary_result))
+        decimal_result = self.binary_result_decimal(tuple(binary_result_sign))
 
         return binary_result, decimal_result
 
